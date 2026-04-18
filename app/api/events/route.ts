@@ -23,8 +23,13 @@ export async function POST(req: NextRequest) {
       cloudinary.uploader.upload_stream(
         { resource_type: "image", folder: "devevent" },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            reject(error);
+          } else if (result) {
+            resolve(result); // ✅ TypeScript is happy now!
+          } else {
+            reject(new Error("Cloudinary upload failed: Result is undefined"));
+          }
         }
       ).end(buffer);
     }) as { secure_url: string };
