@@ -1,10 +1,10 @@
 import ExploreBtn from '@/components/ExploreBtn';
 import EventCard from '@/components/EventCard';
-
+export const dynamic = "force-dynamic";
 export default async function Home() {
   
   // 1. Grab the base URL (Declared only ONCE! 😉)
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
   console.log("SERVER CHECK - Base URL is:", baseUrl);
 
   // 2. Fetch the data directly from your API!

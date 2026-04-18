@@ -5,8 +5,7 @@ import EventCard from "@/components/EventCard"; // Make sure your EventCard path
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 
 async function getEvent(slug: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(`${baseUrl}/api/events/${slug}`, { 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");  const res = await fetch(`${baseUrl}/api/events/${slug}`, { 
     cache: "no-store" 
   });
   
