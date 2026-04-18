@@ -1,17 +1,25 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import BookEventForm from "@/components/BookEventForm";
-import EventCard from "@/components/EventCard"; // Make sure your EventCard path is correct!
+import EventCard from "@/components/EventCard";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
+import Event from "@/database/event.model";
+import { connectDB } from "@/lib/mongodb";
 
+export const dynamic = "force-dynamic";
+
+// 👇 The new direct-to-database function!
 async function getEvent(slug: string) {
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");  const res = await fetch(`${baseUrl}/api/events/${slug}`, { 
-    cache: "no-store" 
-  });
-  
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.event;
+  try {
+    await connectDB();
+    const event = await Event.findOne({ slug }).lean();
+    if (!event) return null;
+    
+    return JSON.parse(JSON.stringify(event));
+  } catch (error) {
+    console.error("Failed to fetch event from DB:", error);
+    return null;
+  }
 }
 
 export default async function EventDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -19,7 +27,7 @@ export default async function EventDetailsPage({ params }: { params: Promise<{ s
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
   
-  // 2. Fetch data
+  // 2. Fetch data directly from DB
   const event = await getEvent(slug);
   if (!event) return notFound();
 

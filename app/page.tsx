@@ -1,31 +1,27 @@
 import ExploreBtn from '@/components/ExploreBtn';
 import EventCard from '@/components/EventCard';
+import Event from "@/database/event.model";
+import { connectDB } from "@/lib/mongodb";
+
 export const dynamic = "force-dynamic";
-export default async function Home() {
-  
-  // 1. Grab the base URL (Declared only ONCE! 😉)
- const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  console.log("SERVER CHECK - Base URL is:", baseUrl);
 
-  // 2. Fetch the data directly from your API!
-  const response = await fetch(`${baseUrl}/api/events`);
-
-  // 3. X-RAY VISION: If the response is NOT okay, print the raw text!
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("🚨 API BROKE! Here is the raw response:", errorText);
+// 👇 The new direct-to-database function!
+async function getEvents() {
+  try {
+    await connectDB();
+    const eventsData = await Event.find().sort({ createdAt: -1 }).lean();
     
-    // Instead of completely crashing, let's show an error message on the screen
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <h1 className="text-red-500 text-2xl">API Error! Check your VS Code Terminal.</h1>
-      </main>
-    );
+    // We stringify and parse to convert complex MongoDB objects to plain JS
+    return JSON.parse(JSON.stringify(eventsData)); 
+  } catch (error) {
+    console.error("Failed to fetch events from DB:", error);
+    return [];
   }
+}
 
-  // 4. If it is okay, parse the JSON normally
-  const data = await response.json();
-  const events = data.events || [];
+export default async function Home() {
+  // Grab the events directly!
+  const events = await getEvents();
 
   return (
     <main className="min-h-screen p-8 max-w-7xl mx-auto">
@@ -42,7 +38,7 @@ export default async function Home() {
       <div className="mt-32 space-y-7" id="events">
         <h3 className="text-3xl font-semibold">Featured Events</h3>
         
-        {/* 5. Check if we actually have events before mapping! */}
+        {/* Check if we actually have events before mapping! */}
         {events.length > 0 ? (
           <ul className="events flex flex-wrap gap-8 list-none">
             {events.map((event: any) => (
